@@ -1,5 +1,7 @@
 # Explainer: Partitioning :visited links history
 
+This proposal is an early design sketch by the Chrome Platform Hardening Team to describe the problem below and solicit feedback on the proposed solution. It has not been approved to ship in Chrome.
+
 ## Author:
 [Kyra Seevers](https://github.com/kyraseevers)
 
