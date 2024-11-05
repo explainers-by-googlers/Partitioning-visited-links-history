@@ -56,6 +56,13 @@ Our partition key will be `triple-keyed` or store three pieces of information: t
 2. The renderer asks if the partition keys are stored in :visited Links.
 3. If :visited Links contains an entry matching all parts of the partition key, it allows the renderer to color the link as visited.
 
+### Self Links - A Potential Exception:
+We have received many feature requests for "self links" which can broadly be defined as an anchor element which links to a site’s own pages. Expressed in terms of a triple-key, it is a key of: <link url, link url, link url>. Let's consider the following scenario, where a user navigates to site foo.com which displays a link to bar.com. The user then clicks on the link to bar.com. One might assume that any links to bar.com on bar.com itself would be styled as :visited. However, with the partitioning model described above, the triple key from the user's click would be <bar.com, foo.com, foo.com>. This does not match the triple-key of the self link <bar.com, bar.com. bar.com>, and so these self links would not be styled as :visited.
+
+Interestingly, a site will know whether a user has visited its subpages - this is information about user behavior it already has. Thus, we can reasonably propose an exception for self links into our partitioning model without sacrificing user privacy. In the self-links partitioning model, a link pointing to the same URL as the page it is displayed on, which has been :visited from any top-level site and frame origin, may be styled as :visisted if and only if it is displayed in a top-level frame or same-origin subframe. This restriction to top-level frames or same-origin subframes prevents cross-origin leaks.
+
+We are currently experimenting with the self-links partitioning model described here.
+
 ## Prior Art:
 There have been many proposals to reduce the amount of user browsing history leaked by :visited links. Proposals written before 2011 are well summarized by Weinberg et. al. in Section IV: “F. Discussion” of [I Still Know What You Visited Last Summer: Leaking Browsing History via User Interaction and Side Channel Attacks.](https://ieeexplore.ieee.org/document/5958027)
 
@@ -157,7 +164,9 @@ Thanks to Artur Janc, Mike Taylor, and Brianna Goldstein for their advice, exper
   - Michael Smith et al, [USENIX WOOT 2018: Browser history re:visited](https://www.usenix.org/sites/default/files/conference/protected-files/woot18_slides_smith.pdf)
   - Known WONTFIX bugs: [crbug.com/252165](http://crbug.com/252165), [crbug.com/835590](http://crbug.com/835590)
 
-  #### Pixel Color Attacks
+  #### Pixel Stealing Attacks
+  - Wang et al, 2023: [DVFS Frequently Leaks Secrets: Hertzbleed Attacks
+Beyond SIKE, Cryptography, and CPU-Only Data](https://ieeexplore.ieee.org/document/10179326)
   - Taneja et al, 2023: [Hot Pixels: Frequency, Power, and Temperature Attacks on GPUs and Arm SoCs](https://doi.org/10.48550/arXiv.2305.12784)
   - Łukasz Olejnik, 2017: [Stealing sensitive browser data with the W3C Ambient Light Sensor API](https://blog.lukaszolejnik.com/stealing-sensitive-browser-data-with-the-w3c-ambient-light-sensor-api/)
   - Artur Janc: [Cross-origin data leaks via the ambient light sensor](http://arturjanc.com/ls/) 
