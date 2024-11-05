@@ -43,7 +43,6 @@ Until browsers remove the visible differences between visited and unvisited link
 
 ## Non-Goals:
 - This document does not deprecate the :visited links selector. It merely limits which links may be colored as visited on the page.
-- This document does not propose solutions to prevent leaking browsing history through process-level attacks or renderer compromises. This is covered in the Future Work section below.
 - This document does not propose methods to reduce complexity in CSS parsing related to the 2010 mitigations. This is covered in the Future Work section below.
 
 ## General API Approach:
@@ -105,6 +104,9 @@ In our proposed design, :visited links history would only contain user browsing 
 #### Storing Partitioned Keys Before Launch
 To ensure that the transition between unpartitioned and partitioned :visited links history is as smooth as possible for users, we intend to spend a period of time before launch storing newly visited links as both partitioned and unpartitioned in the database. While this temporarily increases the size of the database, it also ensures that the browser can store complete information about recently visited links before the feature launches.
 
+#### Preventing Leaks From Renderer Compromises
+For browsers that store :visited links in the renderer, process-level attacks like SpectreJS have the potential to leak user browsing history in the event of a renderer compromise. We intend to address this issue by implementing "per-origin salts." When we construct the partitioned :visited links hashtable, we will input a salt corresponding to the link's frame origin to the hash. Each salt will be 1:1 with a specific origin, and these salts will be kept in the browser process alone. When a navigation to that frame origin occurs, we will notify the resulting renderer process ONLY of its corresponding salt. Without the salt, the hashtable values cannot be queried. The result is a hashtable which is "unreadable" except for the entries that match the renderer process' origin - rendering obsolete the usefulness of any renderer compromises to obtain this table information.
+
 ## Security and Privacy
 The goal of this proposed solution is to improve user privacy by reducing the amount of history leaked by :visited links and rendering the information gained by side-channel attacks obsolete. 
 
@@ -117,9 +119,6 @@ Our partition key design enforces a strong privacy boundary:
   - prevents history leaks across subdomains with different security postures.
 
 ## Future Work
-#### Preventing Leaks From Renderer Compromises
-For browsers that store :visited links in the renderer, process-level attacks like SpectreJS still have the potential to leak user browsing history in the event of a renderer compromise. As future work, we could partition the memory stored in each process to eliminate this particular leak vector.
-
 #### Deprecating the 2010 CSS Mitigations
 The proposed API in this explainer would improve user privacy against side-channel attacks, including those covered by the 2010 mitigations. As future work, we could deprecate the 2010 mitigations, reducing the complexity of CSS for both browsers and web developers.
 
