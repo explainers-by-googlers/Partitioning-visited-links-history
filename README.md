@@ -61,7 +61,7 @@ We have received many feature requests for "self links" which can broadly be def
 
 Interestingly, a site will know whether a user has visited its subpages - this is information about user behavior it already has. Thus, we can reasonably propose an exception for self links into our partitioning model without sacrificing user privacy. In the self-links partitioning model, a link pointing to the same URL as the page it is displayed on, which has been :visited from any top-level site and frame origin, may be styled as :visisted if and only if it is displayed in a top-level frame or same-origin subframe. This restriction to top-level frames or same-origin subframes prevents cross-origin leaks.
 
-We are currently experimenting with the self-links partitioning model described here.
+We are currently experimenting with the self-links partitioning model described here. In these experiments, we still conduct the three steps listed above for checking whether a partitioned visited link should be styled as :visited. The only change architecturally is the addition of a <link_url, link_url, link_url> key to the partitioned hashtable for each valid <link_url, top_level_site, frame_origin> we come across in a top-level frame or same-origin subframe.
 
 ## Prior Art:
 There have been many proposals to reduce the amount of user browsing history leaked by :visited links. Proposals written before 2011 are well summarized by Weinberg et. al. in Section IV: “F. Discussion” of [I Still Know What You Visited Last Summer: Leaking Browsing History via User Interaction and Side Channel Attacks.](https://ieeexplore.ieee.org/document/5958027)
