@@ -117,7 +117,7 @@ For browsers that store :visited links in the renderer, process-level attacks li
 Users can experiment with a prototype of the solution described above beginning in Chrome Version 132. However, **please note that this is intended for experimentation purposes and is subject to change as a specification takes shape and develops**. For example, partitioning support for context click :visisted links was not added until Chrome Version 133.
 
 To experiment with the partitioned :visited links model (with self links), choose one of the following methods:</br>
-1. Navigate to chrome://flags in the omnibox and search for **Partition the Visited Link Database, including 'self links'**. Select "Enabled" from the dropdown on the right and restart the browser. ![An image of the chrome://flags page with the correct flag being set to enabled](./img/ExplainerImage5.jpg)</br>
+1. Navigate to [chrome://flags/#partition-visited-link-database-with-self-links](chrome://flags/#partition-visited-link-database-with-self-links). Select "Enabled" from the dropdown on the right and restart the browser. ![An image of the chrome://flags page with the correct flag being set to enabled](./img/ExplainerImage5.jpg)</br>
 
 **OR**
 
