@@ -17,6 +17,7 @@ This proposal is an early design sketch by the Chrome Platform Hardening Team to
   - [Prior Art](#prior-art)
   - [Key Scenarios](#key-scenarios)
   - [Additional Design Principles](#additional-design-principles)
+- [How to Experiment](#how-to-experiment)
 - [Security and Privacy](#security-and-privacy)
 - [Future Work](#future-work)
 - [Alternatives Considered](#alternatives-considered)
@@ -111,6 +112,22 @@ To ensure that the transition between unpartitioned and partitioned :visited lin
 
 #### Preventing Leaks From Renderer Compromises
 For browsers that store :visited links in the renderer, process-level attacks like SpectreJS have the potential to leak user browsing history in the event of a renderer compromise. We intend to address this issue by implementing "per-origin salts." When we construct the partitioned :visited links hashtable, we will input a salt corresponding to the link's frame origin to the hash. Each salt will be 1:1 with a specific origin, and these salts will be kept in the browser process alone. When a navigation to that frame origin occurs, we will notify the resulting renderer process ONLY of its corresponding salt. Without the salt, the hashtable values cannot be queried. The result is a hashtable which is "unreadable" except for the entries that match the renderer process' origin - rendering obsolete the usefulness of any renderer compromises to obtain this table information.
+
+## How to Experiment:
+Users can experiment with a prototype of the solution described above beginning in Chrome Version 132. However, **please note that this is intended for experimentation purposes and is subject to change as a specification takes shape and develops**. For example, partitioning support for context click :visisted links was not added until Chrome Version 133.
+
+To experiment with the partitioned :visited links model (with self links), choose one of the following methods:
+1. Navigate to chrome://flags in the omnibox and search for **Partition the Visited Link Database, including 'self links'**. Select "Enabled" from the dropdown on the right and restart the browser. ![An image of the chrome://flags page with the correct flag being set to enabled](./img/ExplainerImage5.jpg)</br>
+
+**OR**
+
+2. Run Chrome from your command line with **blink::features::PartitionVisitedLinkDatabaseWithSelfLinks** enabled.
+
+**OR**
+
+3. Turn on [Experimental Web Platform features as described in this article](https://developer.chrome.com/docs/web-platform/chrome-flags#two_other_ways_to_try_out_experimental_features) - please note, however, that this enables ALL of the web platform features set as experimental within Chrome.
+
+If you experience any issues, please check first that your **Chrome version is 132 or higher**. Otherwise, please file a bug either in this repo or via [Chromium Buganizer](https://issues.chromium.org/u/2/issues/new?component=1456589&template=0) with kyraseevers@chromium.org as the assignee.
 
 ## Security and Privacy
 The goal of this proposed solution is to improve user privacy by reducing the amount of history leaked by :visited links and rendering the information gained by side-channel attacks obsolete. 
