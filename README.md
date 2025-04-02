@@ -20,6 +20,7 @@ This proposal is an early design sketch by the Chrome Platform Hardening Team to
 - [How to Experiment](#how-to-experiment)
 - [Security and Privacy](#security-and-privacy)
 - [Future Work](#future-work)
+- [Implementation Details](#implementation-details)
 - [Alternatives Considered](#alternatives-considered)
 - [References and Acknowledgements](#references-and-acknowledgements)
 
@@ -143,6 +144,27 @@ Our partition key design enforces a strong privacy boundary:
 ## Future Work
 #### Deprecating the 2010 CSS Mitigations
 The proposed API in this explainer would improve user privacy against side-channel attacks, including those covered by the 2010 mitigations. As future work, we could deprecate the 2010 mitigations, reducing the complexity of CSS for both browsers and web developers.
+
+## Implementation Details
+While the concept of partitioning :visited links via triple key is straightforward, there is nuance in how this is implemented in Chromium. We share these implementation details to discuss our findings with other browsers and developers interested in partitioning in the hopes that they will find them helpful during their own implementation journey.
+#### What types of navigations are eligible to be stored as :visited state (for Chromium)?
+Any navigation which has enough information to construct a triple-key is eligible to be styled as :visited. This means that a navigation must have originated from a valid top-level site and frame origin value. Notably, in Chromium, this requires a lot of implementation nuance.
+- **Self Links**: [see above](#an-exception-self-links)
+- **Page Transition Type Filtering**: We only allow `LINK` and `MANUAL_SUBFRAME` transition types to be added to the `VisitedLinkDatabase`; this is because other transition types cannot be reliably attributed to a valid top-level site and/or frame origin.
+- **Opening A Link In A New Tab**: Users can open a link in a new tab by right clicking on a link to open it (also called a context click) or clicking on a link which a developer has designated with `target=“_blank”`. This does result in a navigation with a `LINK` transition type, however, it does not have access to a valid previous primary main frame to populate its top-level site. Instead we use the navigation’s opener value. For `target=“_blank”` navigations, we use the live original opener chain rather than the window.opener value, as the opener relationship is also severed. As a result, the triple key is technically <link url, top-level site OR opener, frame origin>. 
+- **`noreferrer` and `noopener`**: When developers designated links as noreferrer or noopener it automatically severs our access to the values usually used to populate frame origin and top-level site (for navigations without a valid previous primary main frame), respectively. As mentioned above, when window.opener is null, we fall back on the live original opener chain. We are still working on a solution for a valid noreferrer replacement.
+- **Fenced Frames and Credentialless and Sandboxed Iframes**: Because each of these frames have ephemeral or no state associated with them, it is only right that they neither store nor style :visited links. Navigations coming from these frames are not stored as :visited and links displayed in these frames are not styled as :visited.
+- **chrome.history.addUrl()**: For extensions, when a developer adds a URL to history via `chrome.history.addUrl()`, we add a “self-link” version of that URL to partitioned :visited history: <url, url, url>. As a result, currently, this API only supports styling links to that URL as :visited when they are on the top-level site and frame origin of the URL they provided.
+- **Status Code Filtering**: Currently, Chromium filters out any navigations resulting in error codes from the `HistoryDatabase`. We have plans to alter this behavior such that error navigations can be added to partitioned :visited history.
+
+#### When, during the navigation process, is a link added to Chromium’s :visited state?
+In Chromium, partition keys are stored in two places: the VisitedLinkDatabase and the in-memory partitioned hashtable. The VisitedLinkDatabase is a table within the larger HistoryDatabase stored on a user’s profile. The VisitedLinkDatabase is in charge of persisting the partition keys across browsing sessions. Upon browser startup, the in-memory partitioned hashtable is populated from the VisitedLinkDatabase.
+
+The in-memory partitioned hashtable exists for performance reasons, we need quick lookup time and quick insertion time on the main thread (something that the VisitedLinkDatabase does not offer). A copy of the in-memory hashtable is stored in the browser process AND in each renderer process.
+
+When a navigation takes place, we intercept it via a NavigationThrottle to synchronously determine the navigation’s corresponding per-origin salt used to generate the fingerprint stored in our partitioned hashtable. This per-origin salt is only sent to the navigation’s corresponding process to [prevent leaks due to renderer compromises](#preventing-leaks-from-renderer-compromises). Note that we do not block the main thread here, just use the NavigationThrottle infrastructure to intercept incoming navigations.
+
+In addition, navigations are intercepted by `HistoryTabHelper::DidFinishNavigation()` which is the entry-point to the HistoryDatabase. There, we add to both the VisitedLinkDatabase and the in-memory partitioned hashtable. When a partitioned :visited link is added to the browser-side partitioned hashtable, that link broadcasted to the renderer-side partitioned hashtable. For performance reasons, new links are grouped together and broadcasted every 100 milliseconds.
 
 ## Alternatives Considered
 #### Deprecate the :visited selector 
