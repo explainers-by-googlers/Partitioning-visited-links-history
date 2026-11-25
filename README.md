@@ -196,7 +196,7 @@ Thanks to Artur Janc, Mike Taylor, and Brianna Goldstein for their advice, exper
 
   #### Timing Attacks
   - Paul Stone, BlackHat 2013: [Pixel Perfect Timing Attacks with HTML5](https://owasp.org/www-pdf-archive//HackPra_Allstars-Browser_Timing_Attacks_-_Paul_Stone.pdf)
-  - NDevTK: [Detecting Visited Links via Redraw Timing](https://ndev.tk/visted/)
+  - NDevTK: [Detecting Visited Links via Redraw Timing](https://ndevtk.github.io/website/visted/)
   - Naomi Smith et al, [USENIX WOOT 2018: Browser history re:visited](https://www.usenix.org/sites/default/files/conference/protected-files/woot18_slides_smith.pdf)
   - Known WONTFIX bugs: [crbug.com/252165](http://crbug.com/252165), [crbug.com/835590](http://crbug.com/835590)
 
